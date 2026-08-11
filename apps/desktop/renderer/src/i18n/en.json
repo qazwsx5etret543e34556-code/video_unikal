@@ -1,0 +1,209 @@
+{
+  "app": {
+    "title": "Video Uniqueizer Pro",
+    "version": "1.0.0"
+  },
+  "nav": {
+    "queue": "Queue",
+    "presets": "Presets",
+    "settings": "Settings",
+    "license": "License",
+    "logs": "Logs"
+  },
+  "queue": {
+    "title": "Processing Queue",
+    "dropzone": {
+      "title": "Drop video files here",
+      "subtitle": "or click to select files",
+      "supportedFormats": "Supported formats: MP4, AVI, MOV, MKV, WMV"
+    },
+    "task": {
+      "status": {
+        "pending": "Pending",
+        "analyzing": "Analyzing",
+        "processing": "Processing",
+        "finished": "Finished",
+        "error": "Error",
+        "canceled": "Canceled"
+      },
+      "progress": "{{percent}}%",
+      "eta": "ETA: {{time}}",
+      "speed": "Speed: {{speed}}x"
+    },
+    "actions": {
+      "addFiles": "Add Files",
+      "startAll": "Start All",
+      "cancelAll": "Cancel All",
+      "clearFinished": "Clear Finished",
+      "cancel": "Cancel",
+      "retry": "Retry"
+    }
+  },
+  "effects": {
+    "title": "Effects",
+    "reset": "Reset",
+    "randomize": "Randomize",
+    "brightness": {
+      "label": "Brightness",
+      "tooltip": "Adjusts video brightness. 0 = original. Range: -255..255. For uniquezation recommend: -15..15"
+    },
+    "contrast": {
+      "label": "Contrast",
+      "tooltip": "Adjusts contrast. 0 = original. Range: -100..100"
+    },
+    "sharpness": {
+      "label": "Sharpness",
+      "tooltip": "Image sharpness. 0 = original. Range: -100..100"
+    },
+    "saturation": {
+      "label": "Saturation",
+      "tooltip": "Color intensity. 100 = original. Range: 0..200"
+    },
+    "hue": {
+      "label": "Hue",
+      "tooltip": "Color hue shift. 0 = original. Range: -180..180 degrees"
+    },
+    "speed": {
+      "label": "Speed",
+      "tooltip": "Acceleration/slowdown. 100 = original. 105 = +5% faster. Range: 50..200"
+    },
+    "resolution": {
+      "label": "Resolution",
+      "tooltip": "Video scaling. 100 = original. Range: 50..200%"
+    },
+    "zoom": {
+      "label": "Zoom",
+      "tooltip": "Frame zoom. 100 = no zoom. Range: 50..200%"
+    },
+    "rotate": {
+      "label": "Rotate",
+      "tooltip": "Video rotation. Decimal values allowed. Negative = left. Range: -360..360"
+    },
+    "flipHorizontal": {
+      "label": "Flip Horizontal",
+      "tooltip": "Mirror horizontally"
+    },
+    "flipVertical": {
+      "label": "Flip Vertical",
+      "tooltip": "Mirror vertically"
+    },
+    "noise": {
+      "label": "Noise",
+      "tooltip": "Add digital noise. 0 = no noise. Range: 0..100"
+    },
+    "blur": {
+      "label": "Blur",
+      "tooltip": "Blur effect. 0 = no blur. Range: 0..20"
+    },
+    "audioPitchShift": {
+      "label": "Audio Pitch",
+      "tooltip": "Audio pitch shift. 0 = original. Range: -5..5 semitones"
+    },
+    "audioVolume": {
+      "label": "Audio Volume",
+      "tooltip": "Audio volume. 100 = original. Range: 50..200%"
+    },
+    "multiplier": {
+      "label": "Copy Multiplier",
+      "tooltip": "Creates N unique copies with different params. Range: 1..100"
+    },
+    "metadataClean": {
+      "label": "Clean Metadata",
+      "tooltip": "Remove all metadata from video (codec, creation date, etc.)"
+    }
+  },
+  "encoder": {
+    "label": "Encoding Mode",
+    "auto": "Auto (GPU if available)",
+    "cpu": "CPU (libx264)",
+    "nvidia": "NVIDIA GPU (NVENC)",
+    "tooltip": "NVIDIA GPU accelerates encoding. If unavailable — automatically uses CPU"
+  },
+  "license": {
+    "title": "License",
+    "status": {
+      "active": "Active",
+      "inactive": "Not Activated",
+      "expired": "Expired",
+      "offline": "Offline Mode"
+    },
+    "activation": {
+      "keyPlaceholder": "Enter license key XXXX-XXXX-XXXX-XXXX-XXXX",
+      "activateButton": "Activate",
+      "activating": "Activating...",
+      "success": "License activated successfully",
+      "error": "Activation error: {{error}}"
+    },
+    "info": {
+      "key": "License Key",
+      "type": "Type",
+      "expiresAt": "Valid until",
+      "activations": "Activations: {{current}}/{{max}}",
+      "offlineDays": "Offline mode: {{days}} days"
+    },
+    "gracePeriod": {
+      "title": "Working in Offline Mode",
+      "description": "Server unreachable. App works with cached token until {{date}}.",
+      "connectButton": "Check Connection"
+    },
+    "expired": {
+      "title": "Token Expired",
+      "description": "Connect to internet to update license",
+      "retryButton": "Try Again"
+    },
+    "actions": {
+      "deactivate": "Deactivate",
+      "checkStatus": "Check Status",
+      "refresh": "Refresh"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "language": {
+      "label": "Interface Language",
+      "ru": "Russian",
+      "en": "English"
+    },
+    "outputFolder": {
+      "label": "Output Folder",
+      "browse": "Browse",
+      "sameAsInput": "Same as input"
+    },
+    "concurrentTasks": {
+      "label": "Concurrent Tasks",
+      "tooltip": "Number of videos processed in parallel"
+    },
+    "timeout": {
+      "label": "Task Timeout (minutes)",
+      "tooltip": "Maximum processing time per task"
+    }
+  },
+  "presets": {
+    "title": "Effect Presets",
+    "save": "Save Preset",
+    "load": "Load",
+    "delete": "Delete",
+    "namePlaceholder": "Preset Name",
+    "confirmDelete": "Are you sure you want to delete preset \"{{name}}\"?"
+  },
+  "common": {
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "error": "Error",
+    "success": "Success",
+    "retry": "Retry",
+    "close": "Close"
+  },
+  "toasts": {
+    "fileAdded": "File added to queue",
+    "taskStarted": "Processing started",
+    "taskCompleted": "Processing completed",
+    "taskFailed": "Processing error: {{error}}",
+    "licenseActivated": "License activated",
+    "licenseDeactivated": "License deactivated",
+    "settingsSaved": "Settings saved"
+  }
+}
