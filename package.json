@@ -1,0 +1,39 @@
+{
+  "name": "video-uniqueizer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Professional video uniqueization desktop application",
+  "author": "Video Uniqueizer Team",
+  "license": "COMMERCIAL",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "clean": "turbo run clean && rimraf node_modules .turbo",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "desktop:dev": "turbo run dev --filter=desktop",
+    "desktop:build": "turbo run build --filter=desktop",
+    "server:dev": "turbo run dev --filter=license-server",
+    "server:build": "turbo run build --filter=license-server",
+    "admin:dev": "turbo run dev --filter=admin",
+    "admin:build": "turbo run build --filter=admin",
+    "setup": "pnpm install && pnpm exec turbo run setup"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0",
+    "prettier": "^3.2.5",
+    "rimraf": "^5.0.5",
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0",
+    "typescript-eslint": "^7.0.0"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.0.0"
+}
