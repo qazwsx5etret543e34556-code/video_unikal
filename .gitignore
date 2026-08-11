@@ -1,57 +1,94 @@
 ```
 # Dependencies
 node_modules/
-.pnpm-store/
 
 # Build outputs
 dist/
 build/
 target/
 
-# Cache directories
-.cache/
-.nuxt/
-.next/
-.vuepress/dist
-.output
+# Electron-specific
+electron/dist/
+electron/build/
 
-# Environment variables
-.env
-.env.local
-.env.*
-
-# IDE specific
-.vscode/
-.idea/
+# Temp files
+*.tmp
 *.swp
-*.swo
-
-# OS specific
-.DS_Store
-Thumbs.db
 
 # Logs
 *.log
 
-# Temporary files
-*.tmp
-*.temp
+# Environment
+.env
+.env.local
+*.env.*
 
-# Python (if present)
+# IDE files
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python (if applicable)
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 .Python
-env/
 venv/
 .venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git/
 
-# Node.js (if present)
+# Node.js
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# TypeScript
-*.tsbuildinfo
+node_modules/
+jspm_packages/
+web_modules/
+lib-cov/
+coverage/
+.nyc_output
+.grunt
+bower_components/
+jspm_packages/
+node_modules/
+app/bower_components/
+test/tmp/
+test/fixtures/bower_components/
+vendor/
+npm-shrinkwrap.json
+.npm
+node/
+jspm/
+typings/
+.flowconfig
+jest/
+.nyc_output/
+.rpt2_cache/
+.rollup.cache/
+.next/
+.nuxt/
+.vuepress/dist
+.cache/
+.serverless/
+.serverless_plugins/
+dist/
+build/
+.nova/
 ```
