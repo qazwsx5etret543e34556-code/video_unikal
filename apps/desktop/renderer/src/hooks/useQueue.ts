@@ -1,44 +1,70 @@
-import { useEffect, useState } from 'react';
-import { useQueueStore } from '../store/queue.store';
+import { useCallback } from 'react';
+import { useQueueStore } from '@/store/queue.store';
+import { useEffectsStore } from '@/store/effects.store';
+import { useSettingsStore } from '@/store/settings.store';
+import { ipcRenderer } from 'electron';
+import { v4 as uuidv4 } from 'uuid';
 
 export function useQueue() {
-  const tasks = useQueueStore((state) => state.tasks);
-  const addTask = useQueueStore((state) => state.addTask);
-  const updateTask = useQueueStore((state) => state.updateTask);
-  const removeTask = useQueueStore((state) => state.removeTask);
-  const clearFinished = useQueueStore((state) => state.clearFinished);
-  
-  const [isProcessing, setIsProcessing] = useState(false);
+  const { addTasks, updateTask, cancelTask, removeTask, clearFinished } = useQueueStore();
+  const { effects } = useEffectsStore();
+  const { encoderMode, outputFolder } = useSettingsStore();
 
-  const startProcessing = async () => {
-    setIsProcessing(true);
-    // IPC call to start processing will be handled by component
-  };
+  const addFilesToQueue = useCallback(
+    async (filePaths: string[]) => {
+      const tasks = filePaths.map((inputPath) => ({
+        id: uuidv4(),
+        inputPath,
+        outputPath: outputFolder
+          ? `${outputFolder}/${inputPath.split('\\').pop() || inputPath.split('/').pop()}`
+          : `${inputPath}_uniqueized.mp4`,
+        createdAt: new Date().toISOString(),
+        appliedParams: {
+          effects,
+          encoderMode,
+        },
+      }));
 
-  const cancelTask = async (taskId: string) => {
-    // IPC call to cancel task
-    updateTask(taskId, { status: 'CANCELED' });
-  };
+      addTasks(tasks);
+      
+      // Notify main process
+      await ipcRenderer.invoke('queue:add', tasks);
+      
+      return tasks.length;
+    },
+    [addTasks, effects, encoderMode, outputFolder]
+  );
 
-  const retryTask = async (taskId: string) => {
-    updateTask(taskId, { 
-      status: 'PENDING', 
-      progress: 0, 
-      error: undefined 
-    });
-  };
+  const startProcessing = useCallback(async () => {
+    await ipcRenderer.invoke('queue:start');
+  }, []);
+
+  const handleCancelTask = useCallback(
+    async (id: string) => {
+      cancelTask(id);
+      await ipcRenderer.invoke('queue:cancel', id);
+    },
+    [cancelTask]
+  );
+
+  const handleRemoveTask = useCallback(
+    async (id: string) => {
+      removeTask(id);
+      await ipcRenderer.invoke('queue:remove', id);
+    },
+    [removeTask]
+  );
+
+  const handleClearFinished = useCallback(async () => {
+    clearFinished();
+    await ipcRenderer.invoke('queue:clearFinished');
+  }, [clearFinished]);
 
   return {
-    tasks,
-    addTask,
-    updateTask,
-    removeTask,
-    clearFinished,
-    isProcessing,
+    addFilesToQueue,
     startProcessing,
-    cancelTask,
-    retryTask,
+    cancelTask: handleCancelTask,
+    removeTask: handleRemoveTask,
+    clearFinished: handleClearFinished,
   };
 }
-
-export default useQueue;

@@ -1,53 +1,66 @@
 import { create } from 'zustand';
-import type { QueueTask, TaskStatus } from '@video-uniqueizer/shared-types';
+import { Task, TaskStatus } from '@video-uniqueizer/shared-types';
 
 interface QueueState {
-  tasks: QueueTask[];
-  isProcessing: boolean;
-  selectedTaskId: string | null;
-  
-  // Actions
-  setTasks: (tasks: QueueTask[]) => void;
-  addTask: (task: QueueTask) => void;
-  updateTask: (taskId: string, updates: Partial<QueueTask>) => void;
-  removeTask: (taskId: string) => void;
+  tasks: Task[];
+  addTasks: (tasks: Omit<Task, 'status' | 'progress'>[]) => void;
+  updateTask: (id: string, updates: Partial<Task>) => void;
+  cancelTask: (id: string) => void;
+  removeTask: (id: string) => void;
   clearFinished: () => void;
-  setSelectedTask: (taskId: string | null) => void;
-  setIsProcessing: (processing: boolean) => void;
+  getPendingTasks: () => Task[];
+  getProcessingTasks: () => Task[];
 }
 
-export const useQueueStore = create<QueueState>((set) => ({
+export const useQueueStore = create<QueueState>((set, get) => ({
   tasks: [],
-  isProcessing: false,
-  selectedTaskId: null,
 
-  setTasks: (tasks) => set({ tasks }),
-  
-  addTask: (task) => 
-    set((state) => ({ tasks: [...state.tasks, task] })),
-  
-  updateTask: (taskId, updates) =>
+  addTasks: (newTasks) => {
+    set((state) => ({
+      tasks: [
+        ...state.tasks,
+        ...newTasks.map((task) => ({
+          ...task,
+          status: 'PENDING' as TaskStatus,
+          progress: 0,
+        })),
+      ],
+    }));
+  },
+
+  updateTask: (id, updates) => {
     set((state) => ({
       tasks: state.tasks.map((task) =>
-        task.id === taskId ? { ...task, ...updates } : task
+        task.id === id ? { ...task, ...updates } : task
       ),
-    })),
-  
-  removeTask: (taskId) =>
+    }));
+  },
+
+  cancelTask: (id) => {
+    get().updateTask(id, { status: 'CANCELED' });
+  },
+
+  removeTask: (id) => {
     set((state) => ({
-      tasks: state.tasks.filter((task) => task.id !== taskId),
-    })),
-  
-  clearFinished: () =>
+      tasks: state.tasks.filter((task) => task.id !== id),
+    }));
+  },
+
+  clearFinished: () => {
     set((state) => ({
       tasks: state.tasks.filter(
-        (task) => !['FINISHED', 'ERROR', 'CANCELED'].includes(task.status)
+        (task) => task.status !== 'FINISHED' && task.status !== 'ERROR' && task.status !== 'CANCELED'
       ),
-    })),
-  
-  setSelectedTask: (taskId) => set({ selectedTaskId: taskId }),
-  
-  setIsProcessing: (isProcessing) => set({ isProcessing }),
-}));
+    }));
+  },
 
-export default useQueueStore;
+  getPendingTasks: () => {
+    return get().tasks.filter(
+      (task) => task.status === 'PENDING' || task.status === 'ANALYZING'
+    );
+  },
+
+  getProcessingTasks: () => {
+    return get().tasks.filter((task) => task.status === 'PROCESSING');
+  },
+}));
