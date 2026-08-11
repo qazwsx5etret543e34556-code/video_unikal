@@ -98,7 +98,6 @@ nano .env
 DATABASE_URL=postgresql://postgres:secure_password@db:5432/video_uniqueizer
 JWT_SECRET=your_jwt_secret_min_32_chars_change_this
 OFFLINE_TOKEN_SECRET=your_64_char_secret_key_for_hmac_tokens_change_in_production
-ADMIN_IP_WHITELIST=YOUR_VPS_IP,YOUR_HOME_IP
 PORT=3001
 NODE_ENV=production
 ```
@@ -204,7 +203,6 @@ server {
 | `DATABASE_URL` | ✅ | PostgreSQL connection |
 | `JWT_SECRET` | ✅ | Минимум 32 символа |
 | `OFFLINE_TOKEN_SECRET` | ✅ | Минимум 64 символа |
-| `ADMIN_IP_WHITELIST` | ✅ | Ваш IP для доступа к админке |
 | `PORT` | | Порт сервера (3001) |
 
 ### Admin Panel (.env)

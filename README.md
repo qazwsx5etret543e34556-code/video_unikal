@@ -50,7 +50,7 @@ A professional Windows desktop application that applies 24 unique effects to vid
 - **Activation Control**: View and manage device activations
 - **Dashboard**: Statistics and analytics
 - **Audit Log**: Track all admin actions
-- **IP Whitelist**: Restrict admin access by IP
+- **JWT Authentication**: Secure admin login
 
 ### User Experience
 - **Bilingual**: Russian and English (i18next)
@@ -309,9 +309,6 @@ OFFLINE_TOKEN_DAYS=7
 # Server
 PORT=3001
 SERVER_URL=http://localhost:3001
-
-# Admin
-ADMIN_IP_WHITELIST=127.0.0.1,::1,your_admin_ip_here
 
 # CORS
 CORS_ORIGIN=http://localhost:5174

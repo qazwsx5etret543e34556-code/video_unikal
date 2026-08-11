@@ -325,7 +325,6 @@ HMAC-SHA256(payload, OFFLINE_TOKEN_SECRET)
 | `DATABASE_URL` | ✅ | PostgreSQL connection string | `postgresql://user:pass@localhost:5432/db` |
 | `JWT_SECRET` | ✅ | Secret for admin JWT tokens | `your_jwt_secret_min_32_chars` |
 | `OFFLINE_TOKEN_SECRET` | ✅ | Secret for HMAC offline tokens (64+ chars) | `your_64_char_secret_key_here_change_in_production` |
-| `ADMIN_IP_WHITELIST` | ✅ | Comma-separated IPs for admin access | `192.168.1.1,10.0.0.1` |
 | `PORT` | | Server port | `3001` |
 | `NODE_ENV` | | Environment | `production` |
 
