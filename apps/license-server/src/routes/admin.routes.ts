@@ -2,7 +2,6 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { LicenseService } from '../services/license.service.js';
 import { ActivationService } from '../services/activation.service.js';
 import { authMiddleware } from '../middleware/auth.js';
-import { ipWhitelistMiddleware } from '../middleware/ip-whitelist.js';
 import argon2 from 'argon2';
 
 interface LoginBody {
@@ -14,9 +13,6 @@ export async function adminRoutes(fastify: FastifyInstance) {
   const prisma = fastify.prisma;
   const licenseService = new LicenseService(prisma);
   const activationService = new ActivationService(prisma);
-
-  // Apply IP whitelist to all admin routes
-  fastify.addHook('preHandler', ipWhitelistMiddleware);
 
   // POST /api/admin/auth/login
   fastify.post('/auth/login', async (

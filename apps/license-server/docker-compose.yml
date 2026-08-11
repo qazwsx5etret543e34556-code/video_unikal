@@ -33,7 +33,6 @@ services:
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
       OFFLINE_TOKEN_SECRET: ${OFFLINE_TOKEN_SECRET:-your-offline-token-secret-key-must-be-at-least-64-characters-long}
       OFFLINE_TOKEN_DAYS: 7
-      ADMIN_IP_WHITELIST: ${ADMIN_IP_WHITELIST:-127.0.0.1,::1}
       HOST: 0.0.0.0
       PORT: 3001
       LOG_LEVEL: info
