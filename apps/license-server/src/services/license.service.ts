@@ -1,6 +1,7 @@
 import { PrismaClient, LicenseType, LicenseStatus } from '@prisma/client';
 import { createOfflineToken } from './token-signer.js';
 import { generateLicenseKey, normalizeLicenseKey } from './key-generator.js';
+import crypto from 'crypto';
 
 interface ActivateLicenseInput {
   key: string;
@@ -55,9 +56,9 @@ export class LicenseService {
       if (!activation) {
         // Check if max activations reached
         if (license.activations.length >= license.maxActivations) {
-          return { 
-            success: false, 
-            error: `Maximum activations (${license.maxActivations}) reached` 
+          return {
+            success: false,
+            error: `Maximum activations (${license.maxActivations}) reached`
           };
         }
 
@@ -280,6 +281,15 @@ export class LicenseService {
   async deleteLicense(id: string) {
     return this.prisma.license.delete({
       where: { id },
+    });
+  }
+
+  async regenerateKey(id: string) {
+    const newKey = generateLicenseKey();
+
+    return this.prisma.license.update({
+      where: { id },
+      data: { key: newKey },
     });
   }
 }

@@ -1,12 +1,16 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { LicenseService } from '../services/license.service.js';
 import { ActivationService } from '../services/activation.service.js';
-import { authMiddleware } from '../middleware/auth.js';
 import argon2 from 'argon2';
 
 interface LoginBody {
   username: string;
   password: string;
+}
+
+interface JWTPayload {
+  id: string;
+  username: string;
 }
 
 export async function adminRoutes(fastify: FastifyInstance) {
@@ -44,11 +48,11 @@ export async function adminRoutes(fastify: FastifyInstance) {
         data: { lastLoginAt: new Date() },
       });
 
-      // Generate JWT
-      const { token } = fastify.jwtSign({
+      // Generate JWT using the decorated method
+      const jwtResult = await fastify.jwtSign({
         id: admin.id,
         username: admin.username,
-      });
+      } as JWTPayload);
 
       // Log audit
       await prisma.auditLog.create({
@@ -59,7 +63,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
         },
       });
 
-      return reply.send({ token, username: admin.username });
+      return reply.send({ token: jwtResult.token, username: admin.username });
     } catch (error) {
       fastify.log.error({ error }, 'Login failed');
       return reply.status(500).send({ error: 'Internal server error' });
@@ -67,7 +71,25 @@ export async function adminRoutes(fastify: FastifyInstance) {
   });
 
   // Apply auth middleware to protected routes
-  fastify.addHook('preHandler', authMiddleware);
+  fastify.addHook('preHandler', async (request, reply) => {
+    const authHeader = request.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    const token = authHeader.substring(7);
+
+    try {
+      const payload = await fastify.jwtVerify(token);
+      if (!payload) {
+        return reply.status(401).send({ error: 'Invalid token' });
+      }
+      (request as any).user = payload;
+    } catch (error) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+  });
 
   // GET /api/admin/licenses
   fastify.get('/licenses', async (
@@ -214,6 +236,32 @@ export async function adminRoutes(fastify: FastifyInstance) {
     }
   });
 
+  // POST /api/admin/licenses/:id/regenerate
+  fastify.post('/licenses/:id/regenerate', async (
+    request: FastifyRequest<{ Params: { id: string } }>,
+    reply: FastifyReply
+  ) => {
+    try {
+      const { id } = request.params;
+
+      const license = await licenseService.regenerateKey(id);
+
+      // Log audit
+      await prisma.auditLog.create({
+        data: {
+          action: 'LICENSE_REGENERATE',
+          details: { licenseId: id },
+          ip: request.ip,
+        },
+      });
+
+      return reply.send(license);
+    } catch (error) {
+      fastify.log.error({ error }, 'Regenerate license key failed');
+      return reply.status(500).send({ error: 'Internal server error' });
+    }
+  });
+
   // GET /api/admin/activations
   fastify.get('/activations', async (
     request: FastifyRequest<{ Querystring: Record<string, string> }>,
@@ -271,19 +319,17 @@ export async function adminRoutes(fastify: FastifyInstance) {
         totalLicenses,
         activeLicenses,
         totalActivations,
-        totalRevenue,
       ] = await Promise.all([
         prisma.license.count(),
         prisma.license.count({ where: { status: 'ACTIVE' } }),
         prisma.activation.count(),
-        Promise.resolve(0), // Calculate based on your pricing
       ]);
 
       return reply.send({
         totalLicenses,
         activeLicenses,
         totalActivations,
-        totalRevenue,
+        totalRevenue: 0, // Calculate based on your pricing
       });
     } catch (error) {
       fastify.log.error({ error }, 'Get stats failed');

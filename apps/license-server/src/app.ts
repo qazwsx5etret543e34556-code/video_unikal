@@ -3,7 +3,7 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import { prismaPlugin } from './plugins/prisma.js';
-import { jwtPlugin } from './plugins/jwt.js';
+import jwtPlugin from './plugins/jwt.js';
 import { licenseRoutes } from './routes/license.routes.js';
 import { adminRoutes } from './routes/admin.routes.js';
 import { healthRoutes } from './routes/health.routes.js';
@@ -41,7 +41,7 @@ export async function buildApp() {
   // Error handler
   fastify.setErrorHandler((error, request, reply) => {
     fastify.log.error(error);
-    
+
     if (error.validation) {
       return reply.status(400).send({ error: 'Validation failed', details: error.validation });
     }

@@ -1,50 +1,43 @@
+import fp from 'fastify-plugin';
+import fastifyJwt from '@fastify/jwt';
 import { FastifyInstance } from 'fastify';
-import crypto from 'crypto';
 
 export interface JWTPayload {
   id: string;
   username: string;
 }
 
-export async function jwtPlugin(fastify: FastifyInstance) {
-  const secret = process.env.JWT_SECRET || 'fallback-secret-change-in-production';
+async function jwtPlugin(fastify: FastifyInstance) {
+  const secret = process.env.JWT_SECRET || 'fallback-secret-change-in-production-min-32-chars';
 
-  fastify.decorate('jwtSign', (payload: JWTPayload) => {
-    const token = crypto
-      .createHmac('sha256', secret)
-      .update(JSON.stringify(payload))
-      .digest('hex');
-    
-    return {
-      token,
-      payload,
-    };
+  await fastify.register(fastifyJwt, {
+    secret,
+    sign: {
+      expiresIn: '24h',
+    },
   });
 
-  fastify.decorate('jwtVerify', (token: string): JWTPayload | null => {
+  fastify.decorate('jwtSign', async (payload: JWTPayload) => {
+    const token = await fastify.jwt.sign(payload);
+    return { token, payload };
+  });
+
+  fastify.decorate('jwtVerify', async (token: string): Promise<JWTPayload | null> => {
     try {
-      // Simple JWT verification - in production use @fastify/jwt
-      const parts = token.split('.');
-      if (parts.length !== 3) return null;
-      
-      const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
-      const signature = crypto
-        .createHmac('sha256', secret)
-        .update(`${parts[0]}.${parts[1]}`)
-        .digest('hex');
-      
-      if (signature !== parts[2]) return null;
-      
-      return payload as JWTPayload;
+      const decoded = await fastify.jwt.verify(token);
+      return decoded as JWTPayload;
     } catch {
       return null;
     }
   });
 }
 
+export default fp(jwtPlugin);
+
 declare module 'fastify' {
   interface FastifyInstance {
-    jwtSign: (payload: JWTPayload) => { token: string; payload: JWTPayload };
-    jwtVerify: (token: string) => JWTPayload | null;
+    jwtSign: (payload: JWTPayload) => Promise<{ token: string; payload: JWTPayload }>;
+    jwtVerify: (token: string) => Promise<JWTPayload | null>;
+    jwt: typeof import('@fastify/jwt').default;
   }
 }
