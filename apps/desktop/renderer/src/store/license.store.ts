@@ -1,46 +1,66 @@
 import { create } from 'zustand';
-import type { LicenseInfo, SignedToken } from '@video-uniqueizer/shared-types';
+import { persist } from 'zustand/middleware';
+import { LicenseStatus, LicenseType } from '@video-uniqueizer/shared-types';
 
 interface LicenseState {
-  license: LicenseInfo | null;
-  signedToken: SignedToken | null;
-  isActive: boolean;
-  isLoading: boolean;
-  offlineDaysRemaining: number;
-  error: string | null;
-  
-  // Actions
-  setLicense: (license: LicenseInfo | null) => void;
-  setSignedToken: (token: SignedToken | null) => void;
-  setIsActive: (active: boolean) => void;
-  setLoading: (loading: boolean) => void;
-  setOfflineDays: (days: number) => void;
-  setError: (error: string | null) => void;
+  licenseKey: string | null;
+  status: LicenseStatus | null;
+  type: LicenseType | null;
+  expiresAt: string | null;
+  activationsRemaining: number;
+  isOfflineMode: boolean;
+  offlineTokenExpiry: string | null;
+  setLicense: (data: {
+    key: string;
+    status: LicenseStatus;
+    type: LicenseType;
+    expiresAt?: string;
+    activationsRemaining: number;
+  }) => void;
+  setOfflineMode: (active: boolean, expiry?: string) => void;
   clearLicense: () => void;
 }
 
-export const useLicenseStore = create<LicenseState>((set) => ({
-  license: null,
-  signedToken: null,
-  isActive: false,
-  isLoading: true,
-  offlineDaysRemaining: 0,
-  error: null,
-  
-  setLicense: (license) => set({ license }),
-  setSignedToken: (token) => set({ signedToken: token }),
-  setIsActive: (isActive) => set({ isActive }),
-  setLoading: (isLoading) => set({ isLoading }),
-  setOfflineDays: (offlineDaysRemaining) => set({ offlineDaysRemaining }),
-  setError: (error) => set({ error }),
-  
-  clearLicense: () => set({
-    license: null,
-    signedToken: null,
-    isActive: false,
-    offlineDaysRemaining: 0,
-    error: null,
-  }),
-}));
+export const useLicenseStore = create<LicenseState>()(
+  persist(
+    (set) => ({
+      licenseKey: null,
+      status: null,
+      type: null,
+      expiresAt: null,
+      activationsRemaining: 0,
+      isOfflineMode: false,
+      offlineTokenExpiry: null,
 
-export default useLicenseStore;
+      setLicense: (data) =>
+        set({
+          licenseKey: data.key,
+          status: data.status,
+          type: data.type,
+          expiresAt: data.expiresAt || null,
+          activationsRemaining: data.activationsRemaining,
+          isOfflineMode: false,
+        }),
+
+      setOfflineMode: (active, expiry) =>
+        set({
+          isOfflineMode: active,
+          offlineTokenExpiry: expiry || null,
+        }),
+
+      clearLicense: () =>
+        set({
+          licenseKey: null,
+          status: null,
+          type: null,
+          expiresAt: null,
+          activationsRemaining: 0,
+          isOfflineMode: false,
+          offlineTokenExpiry: null,
+        }),
+    }),
+    {
+      name: 'license-storage',
+    }
+  )
+);
