@@ -1,0 +1,42 @@
+appId: com.video-uniqueizer.pro
+productName: Video Uniqueizer Pro
+directories:
+  output: dist
+  buildResources: resources
+
+files:
+  - out/**/*
+  - resources/**/*
+  - package.json
+
+extraResources:
+  - from: resources/ffmpeg
+    to: ffmpeg
+  - from: resources/icons
+    to: icons
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: resources/icons/icon.ico
+  requestedExecutionLevel: asInvoker
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Video Uniqueizer Pro
+  runAfterFinish: true
+  installerHeaderIcon: resources/icons/icon.ico
+  installerIcon: resources/icons/icon.ico
+  uninstallerIcon: resources/icons/icon.ico
+
+publish:
+  provider: generic
+  url: https://updates.video-uniqueizer.com
+  channel: latest
+
+artifactName: VideoUniqueizerPro-${version}-setup.${ext}
