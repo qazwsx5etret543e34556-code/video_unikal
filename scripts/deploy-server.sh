@@ -1,44 +1,97 @@
 #!/bin/bash
-# Deploy License Server to VPS
-# Usage: ./deploy-server.sh <VPS_IP> <SSH_USER>
+
+# Video Uniqueizer Pro - Server Deployment Script
+# Deploys License Server to a VPS (Ubuntu/Debian)
 
 set -e
 
-VPS_IP=${1:-""}
-SSH_USER=${2:-"root"}
-PROJECT_NAME="video-uniqueizer"
+echo "🚀 Video Uniqueizer Pro - Server Deployment"
+echo "==========================================="
+echo ""
 
-if [ -z "$VPS_IP" ]; then
-    echo "❌ Usage: $0 <VPS_IP> [SSH_USER]"
-    echo "Example: $0 192.168.1.100 root"
+# Configuration
+VPS_USER="${VPS_USER:-root}"
+VPS_HOST="${VPS_HOST:-}"
+APP_DIR="/opt/video-uniqueizer"
+
+if [ -z "$VPS_HOST" ]; then
+    echo "❌ Please set VPS_HOST environment variable"
+    echo "   Example: export VPS_HOST=your.server.ip"
     exit 1
 fi
 
-echo "🚀 Deploying License Server to $VPS_IP..."
+echo "📋 Deployment Configuration:"
+echo "   VPS User: $VPS_USER"
+echo "   VPS Host: $VPS_HOST"
+echo "   App Dir:  $APP_DIR"
+echo ""
 
-# Build Docker image locally
-echo "📦 Building Docker image..."
-cd apps/license-server
-docker build -t video-uniqueizer-license-server:latest .
+# Check if Docker is installed on VPS
+echo "🔍 Checking VPS prerequisites..."
+ssh -o StrictHostKeyChecking=no "$VPS_USER@$VPS_HOST" "docker --version" || {
+    echo "⚠ Docker not found on VPS. Installing..."
+    ssh "$VPS_USER@$VPS_HOST" "curl -fsSL https://get.docker.com | sh"
+}
 
-# Tag and push to registry (replace with your registry)
-echo "🏷️  Tagging image..."
-docker tag video-uniqueizer-license-server:latest $SSH_USER/$PROJECT_NAME-license-server:latest
+# Copy application files
+echo "📦 Copying application files..."
+scp apps/license-server/package.json "$VPS_USER@$VPS_HOST:/tmp/"
+scp apps/license-server/tsconfig.json "$VPS_USER@$VPS_HOST:/tmp/"
+scp -r apps/license-server/src "$VPS_USER@$VPS_HOST:/tmp/"
+scp apps/license-server/prisma "$VPS_USER@$VPS_HOST:/tmp/"
+scp apps/license-server/Dockerfile "$VPS_USER@$VPS_HOST:/tmp/"
+scp apps/license-server/docker-compose.yml "$VPS_USER@$VPS_HOST:/tmp/"
+scp apps/license-server/.env.example "$VPS_USER@$VPS_HOST:/tmp/.env"
 
-echo "📤 Pushing to registry..."
-docker push $SSH_USER/$PROJECT_NAME-license-server:latest
+# Deploy on VPS
+echo "🔧 Deploying on VPS..."
+ssh "$VPS_USER@$VPS_HOST" << 'ENDSSH'
+cd /tmp
 
-# Deploy to VPS
-echo "🚀 Deploying to VPS..."
-scp docker-compose.yml $SSH_USER@$VPS_IP:/opt/$PROJECT_NAME/
-scp .env $SSH_USER@$VPS_IP:/opt/$PROJECT_NAME/.env
-
-ssh $SSH_USER@$VPS_IP << 'ENDSSH'
+# Create app directory
+sudo mkdir -p /opt/video-uniqueizer
+sudo cp -r ./* /opt/video-uniqueizer/
 cd /opt/video-uniqueizer
-docker-compose pull
+
+# Install dependencies
+npm install --production
+
+# Generate Prisma client
+npx prisma generate
+
+# Run migrations
+npx prisma migrate deploy
+
+# Create admin user (you should change the password!)
+echo "Creating default admin user..."
+node -e "
+const argon2 = require('argon2');
+async function createAdmin() {
+  const hash = await argon2.hash('ChangeThisPassword123!');
+  console.log('Admin password hash:', hash);
+}
+createAdmin();
+"
+
+# Start with Docker Compose
 docker-compose up -d
-docker system prune -f
+
+# Show status
+docker-compose ps
 ENDSSH
 
+echo ""
 echo "✅ Deployment complete!"
-echo "Server should be available at http://$VPS_IP:3001"
+echo ""
+echo "📋 Next steps:"
+echo "   1. SSH to your VPS: ssh $VPS_USER@$VPS_HOST"
+echo "   2. Update .env file with production secrets"
+echo "   3. Set up SSL certificate (Let's Encrypt)"
+echo "   4. Configure reverse proxy (nginx)"
+echo "   5. Change default admin password"
+echo ""
+echo "🔐 Default admin credentials (CHANGE IMMEDIATELY):"
+echo "   Username: admin"
+echo "   Password: ChangeThisPassword123!"
+echo ""
+echo "📖 Admin panel: http://$VPS_HOST:3001/admin"

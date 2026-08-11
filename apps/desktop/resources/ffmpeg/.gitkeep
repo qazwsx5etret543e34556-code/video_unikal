@@ -1,0 +1,3 @@
+# Placeholder file to ensure this directory is tracked by git.
+# Download ffmpeg.exe and ffprobe.exe using the download-ffmpeg.ps1 script.
+# These files should be placed in this directory before building the application.
