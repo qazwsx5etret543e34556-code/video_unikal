@@ -1,0 +1,165 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build-windows:
+    name: Build Windows Installer
+    runs-on: windows-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          
+      - name: Install dependencies
+        run: pnpm install
+        
+      - name: Download FFmpeg binaries
+        run: powershell -ExecutionPolicy Bypass -File scripts/download-ffmpeg.ps1
+        
+      - name: Build desktop app with installer
+        run: pnpm --filter @video-uniqueizer/desktop build:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Create release notes
+        id: release_notes
+        run: |
+          $version = $env:GITHUB_REF -replace 'refs/tags/v',''
+          $changelog = Get-Content CHANGELOG.md -Raw
+          $section = $changelog -split "(?m)^## \[" | Select-String -Pattern "^\[$version\]" -Context 0,50
+          $notes = $section.Context.PostContext -join "`n"
+          echo "notes=$notes" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+        
+      - name: Upload installer to GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: apps/desktop/dist/installer/*.exe
+          body_path: CHANGELOG.md
+          draft: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: apps/desktop/dist/installer/
+
+  build-server:
+    name: Build License Server
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          
+      - name: Install dependencies
+        run: pnpm install
+        
+      - name: Build license server
+        run: pnpm --filter @video-uniqueizer/license-server build
+        
+      - name: Build Docker image
+        run: |
+          cd apps/license-server
+          docker build -t video-uniqueizer/license-server:${{ github.ref_name }} .
+          docker build -t video-uniqueizer/license-server:latest .
+          
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          
+      - name: Push Docker image
+        run: |
+          docker push video-uniqueizer/license-server:${{ github.ref_name }}
+          docker push video-uniqueizer/license-server:latest
+          
+      - name: Upload server build
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-server
+          path: apps/license-server/dist/
+
+  build-admin:
+    name: Build Admin Panel
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          
+      - name: Install dependencies
+        run: pnpm install
+        
+      - name: Build admin panel
+        run: pnpm --filter @video-uniqueizer/admin build
+        
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v3
+        with:
+          publishDir: './apps/admin/dist'
+          productionBranch: 'main'
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          deployMessage: 'Deploy admin panel ${{ github.ref_name }}'
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          
+      - name: Upload admin build
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-panel
+          path: apps/admin/dist/
+
+  notify:
+    name: Notify Release
+    runs-on: ubuntu-latest
+    needs: [build-windows, build-server, build-admin]
+    
+    steps:
+      - name: Send Discord notification
+        uses: Ilshidur/action-discord@master
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          content: |
+            🎉 New release: ${{ github.ref_name }}
+            
+            **Desktop App**: Windows installer available
+            **License Server**: Docker image pushed
+            **Admin Panel**: Deployed to production
+            
+            View release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}
