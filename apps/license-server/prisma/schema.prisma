@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum LicenseType {
+  ONE_TIME
+  SUBSCRIPTION
+}
+
+enum LicenseStatus {
+  ACTIVE
+  REVOKED
+  EXPIRED
+}
+
+model License {
+  id              String       @id @default(uuid())
+  key             String       @unique
+  type            LicenseType  @default(ONE_TIME)
+  status          LicenseStatus @default(ACTIVE)
+  maxActivations  Int          @default(2)
+  createdAt       DateTime     @default(now())
+  expiresAt       DateTime?
+  note            String?
+  activations     Activation[]
+  
+  @@index([key])
+  @@index([status])
+}
+
+model Activation {
+  id          String   @id @default(uuid())
+  licenseId   String
+  license     License  @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  hwid        String
+  ipAddress   String?
+  userAgent   String?
+  osInfo      String?
+  appVersion  String?
+  activatedAt DateTime @default(now())
+  lastSeenAt  DateTime @updatedAt
+  
+  @@unique([licenseId, hwid])
+  @@index([licenseId])
+  @@index([hwid])
+}
+
+model Admin {
+  id           String    @id @default(uuid())
+  username     String    @unique
+  passwordHash String
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  
+  @@index([username])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  details   Json
+  ip        String?
+  createdAt DateTime @default(now())
+  
+  @@index([action])
+  @@index([createdAt])
+}
